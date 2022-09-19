@@ -1,4 +1,4 @@
-# Docker musl.cc toolchain Ubuntu
+# musl.cc toolchain for Ubuntu based docker image
 
 This is the musl based toolchain from [musl.cc](https://musl.cc/).
 
