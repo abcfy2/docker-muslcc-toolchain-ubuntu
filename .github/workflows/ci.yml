@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/ci.yml"
+  schedule:
+    - cron: "0 0 * * 6"
+
+env:
+  DOCKER_REPOSITORY: abcfy2/muslcc-toolchain-ubuntu
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - aarch64-linux-musl
+          - aarch64_be-linux-musl
+          - arm-linux-musleabi
+          - arm-linux-musleabihf
+          - armeb-linux-musleabi
+          - armeb-linux-musleabihf
+          - armel-linux-musleabi
+          - armel-linux-musleabihf
+          - armv5l-linux-musleabi
+          - armv5l-linux-musleabihf
+          - armv6-linux-musleabi
+          - armv6-linux-musleabihf
+          - armv7l-linux-musleabihf
+          - armv7m-linux-musleabi
+          - armv7r-linux-musleabihf
+          - i486-linux-musl
+          - i686-linux-musl
+          - i686-w64-mingw32
+          - m68k-linux-musl
+          - microblaze-linux-musl
+          - microblazeel-linux-musl
+          - mips-linux-musl
+          - mips-linux-musln32sf
+          - mips-linux-muslsf
+          - mips64-linux-musl
+          - mips64-linux-musln32
+          - mips64-linux-musln32sf
+          - mips64el-linux-musl
+          - mips64el-linux-musln32
+          - mips64el-linux-musln32sf
+          - mipsel-linux-musl
+          - mipsel-linux-musln32
+          - mipsel-linux-musln32sf
+          - mipsel-linux-muslsf
+          - or1k-linux-musl
+          - powerpc-linux-musl
+          - powerpc-linux-muslsf
+          - powerpc64-linux-musl
+          - powerpc64le-linux-musl
+          - powerpcle-linux-musl
+          - powerpcle-linux-muslsf
+          - riscv32-linux-musl
+          - riscv64-linux-musl
+          - s390x-linux-musl
+          - sh2-linux-musl
+          - sh2-linux-muslfdpic
+          - sh2eb-linux-musl
+          - sh2eb-linux-muslfdpic
+          - sh4-linux-musl
+          - sh4eb-linux-musl
+          - x86_64-linux-musl
+          - x86_64-linux-muslx32
+          - x86_64-w64-mingw32
+    steps:
+      - name: Determine if push is needed
+        run: |
+          echo "GITHUB_EVENT_NAME = ${GITHUB_EVENT_NAME}"
+          PUSH=true
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            UPSTREAM_SHA512SUM="${curl -sSLfA "MacroMu" --compressed https://musl.cc/SHA512SUMS | grep "${ARCH}-cross.tgz" | head -1}"
+            DOWNSTREAM_SHA512SUM="$(docker run --pull=always --rm "${DOCKER_REPOSITORY}:${ARCH}" cat /SHA512SUM.txt)" || true
+            if [ "${UPSTREAM_SHA512SUM}" = "${DOWNSTREAM_SHA512SUM}" ]; then
+              PUSH=false
+            fi
+          fi
+          echo "PUSH = ${PUSH}"
+          echo "PUSH=${PUSH}" >> $GITHUB_ENV
+        env:
+          ARCH: ${{ matrix.arch }}
+      - uses: actions/checkout@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        if: ${{ env.PUSH == true }}
+        with:
+          push: true
+          pull: true
+          file: Dockerfile
+          build-args: |
+            ARCH=${{ matrix.arch }}
+          tags: ${{ env.DOCKER_REPOSITORY }}:${{ matrix.arch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
