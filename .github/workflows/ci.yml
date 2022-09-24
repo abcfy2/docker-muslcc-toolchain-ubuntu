@@ -79,7 +79,7 @@ jobs:
           echo "GITHUB_EVENT_NAME = ${GITHUB_EVENT_NAME}"
           PUSH=true
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            UPSTREAM_SHA512SUM="${curl -sSLfA "MacroMu" --compressed https://musl.cc/SHA512SUMS | grep "${ARCH}-cross.tgz" | head -1}"
+            UPSTREAM_SHA512SUM="$(curl -sSLfA "MacroMu" --compressed https://musl.cc/SHA512SUMS | grep "${ARCH}-cross.tgz" | head -1)"
             DOWNSTREAM_SHA512SUM="$(docker run --pull=always --rm "${DOCKER_REPOSITORY}:${ARCH}" cat /SHA512SUM.txt)" || true
             if [ "${UPSTREAM_SHA512SUM}" = "${DOWNSTREAM_SHA512SUM}" ]; then
               PUSH=false
