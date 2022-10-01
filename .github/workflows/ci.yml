@@ -76,6 +76,7 @@ jobs:
     steps:
       - name: Determine if push is needed
         run: |
+          set -eo pipefail
           echo "GITHUB_EVENT_NAME = ${GITHUB_EVENT_NAME}"
           PUSH=true
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
