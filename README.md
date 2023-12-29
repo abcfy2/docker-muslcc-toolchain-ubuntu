@@ -13,4 +13,4 @@ This is useful for some building environments which require a glibc based librar
 
 Cross toolchain installed in `/cross_root`. And `/cross_root/bin` has been already appended to `PATH`, so you can use cross compiler like `arm-linux-musleabi-gcc -v` directly.
 
-An useful example can be foundt at [abcfy2/aria2-static-build](https://github.com/abcfy2/aria2-static-build/blob/main/build.sh)
+An useful example can be found at [abcfy2/aria2-static-build](https://github.com/abcfy2/aria2-static-build/blob/main/build.sh)
